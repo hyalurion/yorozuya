@@ -74,7 +74,7 @@ dependencies:
   network_info_plus: 8.1.0
   
   # 国际化和日期格式化
-  intl: ^0.19.0
+  intl: ^0.20.0
   
   # 农历支持
   lunar: ^1.7.7
