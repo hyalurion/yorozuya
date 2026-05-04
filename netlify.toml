@@ -1,11 +1,11 @@
 [build]
-  command = "echo 'Building Flutter web app...' && curl -sL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.38.0-stable.tar.xz -o flutter.tar.xz && tar -xf flutter.tar.xz && export PATH=$(pwd)/flutter/bin:$PATH && echo 'Flutter路径:' $(which flutter) && echo 'Flutter版本:' && flutter --version && cd flutter_app && echo '进入flutter_app目录' && ls -la && flutter pub get && flutter build web --release"
+  command = "echo 'Building Flutter web app...' && curl -sL https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.38.9-stable.tar.xz -o flutter.tar.xz && tar -xf flutter.tar.xz && export PATH=$(pwd)/flutter/bin:$PATH && echo 'Flutter路径:' $(which flutter) && echo 'Flutter版本:' && flutter --version && cd flutter_app && echo '进入flutter_app目录' && ls -la && flutter pub get && flutter build web --release"
   publish = "flutter_app/build/web"
   base = "."
 
 [build.environment]
-  FLUTTER_VERSION = "3.38.0"
-  DART_VERSION = "3.10.0"
+  FLUTTER_VERSION = "3.38.9"
+  DART_VERSION = "3.10.8"
 
 [dev]
   command = "cd flutter_app && flutter run -d web-server"
