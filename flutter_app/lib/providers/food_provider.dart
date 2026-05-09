@@ -139,10 +139,10 @@ class FoodProvider extends ChangeNotifier {
     return _foodItems.first;
   }
 
-  // 生成周计划
+  // 生成周计划（每天早中晚3个菜品）
   Future<void> generateWeeklyPlan() async {
-    // 使用新的getRandomFoodList方法生成7天的食物计划
-    _weeklyPlan = getRandomFoodList(7);
+    // 生成7天 * 3餐 = 21个菜品
+    _weeklyPlan = getRandomFoodList(21);
     _lastPlanDate = DateTime.now();
     await _saveData();
     notifyListeners();
