@@ -24,12 +24,31 @@ class _HomePageState extends State<HomePage> {
   bool _isLoadingWeather = false;
   String? _weatherError;
   bool _isInitialized = false;
+  DateTime _currentTime = DateTime.now();
+  Timer? _timer;
+  DateTime? _lastWeatherFetchTime;
+  static const Duration _cacheDuration = Duration(minutes: 30);
 
   @override
   void initState() {
     super.initState();
     _isInitialized = true;
     _fetchWeather();
+    _startTimeUpdate();
+  }
+
+  void _startTimeUpdate() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _currentTime = DateTime.now();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   Future<Position?> _getCurrentPosition() async {
@@ -83,6 +102,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchWeather() async {
+    if (_lastWeatherFetchTime != null && 
+        DateTime.now().difference(_lastWeatherFetchTime!) < _cacheDuration) {
+      return;
+    }
+
     setState(() {
       _isLoadingWeather = true;
       _weatherError = null;
@@ -106,6 +130,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _weatherData = json.decode(response.body);
           _isLoadingWeather = false;
+          _lastWeatherFetchTime = DateTime.now();
         });
       } else {
         setState(() {
@@ -183,9 +208,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     final now = DateTime.now();
-    final date = '${now.month.toString().padLeft(2, '0')}月${now.day.toString().padLeft(2, '0')}日';
-    final weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    final weekday = weekdays[now.weekday % 7];
+    final date = '${now.year}年${now.month.toString().padLeft(2, '0')}月${now.day.toString().padLeft(2, '0')}日';
+    final weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+    final weekday = weekdays[now.weekday - 1];
     
     final lunarDate = Lunar.fromDate(now);
     final lunarMonth = '${lunarDate.getMonthInChinese()}月';
@@ -194,46 +219,24 @@ class _HomePageState extends State<HomePage> {
     final lunarFullString = '$lunarGanZhiYear年$lunarMonth$lunarDay';
 
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildDateCard(
-                date: date,
-                weekday: weekday,
-                lunarDate: lunarFullString,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDarkMode: isDarkMode,
-              ),
-              const SizedBox(height: 16.0),
-              _buildWeatherCard(
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDarkMode: isDarkMode,
-              ),
-              const SizedBox(height: 16.0),
-              _buildForecastCard(
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDarkMode: isDarkMode,
-              ),
-              const SizedBox(height: 16.0),
-              _buildCalendarCard(
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-                isDarkMode: isDarkMode,
-              ),
-            ],
+          child: _buildSmartSuggestionCard(
+            date: date,
+            weekday: weekday,
+            lunarDate: lunarFullString,
+            textPrimary: textPrimary,
+            textSecondary: textSecondary,
+            isDarkMode: isDarkMode,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildDateCard({
+  Widget _buildSmartSuggestionCard({
     required String date,
     required String weekday,
     required String lunarDate,
@@ -243,9 +246,12 @@ class _HomePageState extends State<HomePage> {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isLargeScreen = screenWidth > 768;
+    final time = _currentTime;
+    final timeStr = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:${time.second.toString().padLeft(2, '0')}';
+    final smartSuggestion = _generateSmartSuggestion();
 
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: isLargeScreen ? const EdgeInsets.all(32.0) : const EdgeInsets.all(24.0),
       decoration: BoxDecoration(
         color: isDarkMode 
             ? Colors.black.withValues(alpha: 0.3)
@@ -269,142 +275,202 @@ class _HomePageState extends State<HomePage> {
       ),
       child: isLargeScreen
           ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '$date$weekday',
-                  style: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.bold,
-                    color: textPrimary,
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '智能建议',
+                        style: TextStyle(
+                          fontSize: 24.0,
+                          fontWeight: FontWeight.bold,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      Text(
+                        date,
+                        style: TextStyle(
+                          fontSize: 32.0,
+                          fontWeight: FontWeight.bold,
+                          color: textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 12.0),
+                      Text(
+                        '星期$weekday',
+                        style: TextStyle(
+                          fontSize: 20.0,
+                          color: textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      Text(
+                        lunarDate,
+                        style: TextStyle(
+                          fontSize: 18.0,
+                          color: textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 28.0,
+                            color: textPrimary,
+                          ),
+                          const SizedBox(width: 12.0),
+                          Text(
+                            timeStr,
+                            style: TextStyle(
+                              fontSize: 36.0,
+                              fontWeight: FontWeight.bold,
+                              color: textPrimary,
+                              fontFamily: 'Courier New',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    '·',
-                    style: TextStyle(
-                      fontSize: 28.0,
-                      color: textSecondary,
-                    ),
-                  ),
-                ),
-                Text(
-                  lunarDate,
-                  style: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.bold,
-                    color: textPrimary,
+                const SizedBox(width: 32.0),
+                const VerticalDivider(width: 1.0),
+                const SizedBox(width: 32.0),
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _isLoadingWeather
+                          ? Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(textSecondary),
+                              ),
+                            )
+                          : _buildSmartSuggestionContent(smartSuggestion, textPrimary, textSecondary),
+                    ],
                   ),
                 ),
               ],
             )
           : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$date$weekday',
+                  '智能建议',
                   style: TextStyle(
-                    fontSize: 32.0,
+                    fontSize: 20.0,
                     fontWeight: FontWeight.bold,
                     color: textPrimary,
                   ),
                 ),
                 const SizedBox(height: 16.0),
                 Text(
-                  lunarDate,
+                  date,
                   style: TextStyle(
-                    fontSize: 24.0,
+                    fontSize: 28.0,
                     fontWeight: FontWeight.bold,
                     color: textPrimary,
                   ),
                 ),
+                const SizedBox(height: 8.0),
+                Text(
+                  '星期$weekday  $lunarDate',
+                  style: TextStyle(
+                    fontSize: 18.0,
+                    color: textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16.0),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 24.0,
+                      color: textPrimary,
+                    ),
+                    const SizedBox(width: 8.0),
+                    Text(
+                      timeStr,
+                      style: TextStyle(
+                        fontSize: 32.0,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimary,
+                        fontFamily: 'Courier New',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20.0),
+                Divider(color: textSecondary.withOpacity(0.3)),
+                const SizedBox(height: 16.0),
+                _isLoadingWeather
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(textSecondary),
+                        ),
+                      )
+                    : _buildSmartSuggestionContent(smartSuggestion, textPrimary, textSecondary),
               ],
             ),
     );
   }
 
-  Widget _buildWeatherCard({
-    required Color textPrimary,
-    required Color textSecondary,
-    required bool isDarkMode,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        color: isDarkMode 
-            ? Colors.black.withValues(alpha: 0.3)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: isDarkMode 
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.3),
-          width: 1.0,
+  Widget _buildSmartSuggestionContent(String suggestion, Color textPrimary, Color textSecondary) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.lightbulb,
+              size: 20.0,
+              color: Colors.amber,
+            ),
+            const SizedBox(width: 8.0),
+            Text(
+              '今日建议',
+              style: TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.bold,
+                color: textPrimary,
+              ),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isDarkMode 
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 32.0,
-            spreadRadius: 8.0,
+        const SizedBox(height: 12.0),
+        Text(
+          suggestion,
+          style: TextStyle(
+            fontSize: 16.0,
+            color: textSecondary,
+            height: 1.6,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '天气',
-                style: TextStyle(
-                  fontSize: 20.0,
-                  fontWeight: FontWeight.bold,
-                  color: textPrimary,
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.refresh, color: textSecondary),
-                onPressed: _fetchWeather,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16.0),
-          if (_isLoadingWeather)
-            Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(textSecondary),
-              ),
-            )
-          else if (_weatherError != null)
-            Center(
-              child: Text(
-                _weatherError!,
-                style: TextStyle(
-                  color: isDarkMode ? Colors.redAccent : Colors.red,
-                  fontSize: 14.0,
-                ),
-              ),
-            )
-          else if (_weatherData != null)
-            _buildWeatherContent(textPrimary, textSecondary, isDarkMode),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _buildWeatherContent(Color textPrimary, Color textSecondary, bool isDarkMode) {
+  String _generateSmartSuggestion() {
+    if (_weatherError != null) {
+      return '天气信息获取失败，请检查网络连接。今天也要保持好心情哦~';
+    }
+
+    if (_weatherData == null) {
+      return '正在获取天气信息...';
+    }
+
     final current = _weatherData!['current'];
     final daily = _weatherData!['daily'];
-    final temp = double.tryParse(current['temperature_2m'].toString()) ?? 0.0;
     final code = current['weather_code'];
+    final temp = double.tryParse(current['temperature_2m'].toString()) ?? 0.0;
     final windSpeed = double.tryParse(current['wind_speed_10m'].toString()) ?? 0.0;
     final humidity = double.tryParse(current['relative_humidity_2m'].toString()) ?? 0;
-    final apparentTemp = double.tryParse(current['apparent_temperature'].toString()) ?? temp;
-    final pressure = double.tryParse(current['pressure_msl'].toString()) ?? 0;
-    final isDay = current['is_day'] == 1;
     
     final uvIndexList = daily['uv_index_max'] as List?;
     final precipitationList = daily['precipitation_sum'] as List?;
@@ -412,462 +478,41 @@ class _HomePageState extends State<HomePage> {
     final uvIndex = uvIndexList != null && uvIndexList.isNotEmpty ? double.tryParse(uvIndexList[0].toString()) ?? 0.0 : 0.0;
     final precipitation = precipitationList != null && precipitationList.isNotEmpty ? double.tryParse(precipitationList[0].toString()) ?? 0.0 : 0.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              _getWeatherIcon(code),
-              size: 48.0,
-              color: textPrimary,
-            ),
-            const SizedBox(width: 16.0),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${temp.toStringAsFixed(1)}°C',
-                    style: TextStyle(
-                      fontSize: 36.0,
-                      fontWeight: FontWeight.bold,
-                      color: textPrimary,
-                    ),
-                  ),
-                  Text(
-                    _getWeatherDescription(code),
-                    style: TextStyle(
-                      fontSize: 16.0,
-                      color: textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16.0),
-        _buildWeatherDetailRow(
-          icon: Icons.thermostat,
-          label: '体感温度',
-          value: '${apparentTemp.toStringAsFixed(1)}°C',
-          textSecondary: textSecondary,
-        ),
-        const SizedBox(height: 12.0),
-        _buildWeatherDetailRow(
-          icon: Icons.water_drop,
-          label: '湿度',
-          value: '${humidity.toStringAsFixed(0)}%',
-          textSecondary: textSecondary,
-        ),
-        const SizedBox(height: 12.0),
-        _buildWeatherDetailRow(
-          icon: Icons.air,
-          label: '风速',
-          value: '${windSpeed.toStringAsFixed(1)} km/h',
-          textSecondary: textSecondary,
-        ),
-        const SizedBox(height: 12.0),
-        _buildWeatherDetailRow(
-          icon: Icons.compress,
-          label: '气压',
-          value: '${pressure.toStringAsFixed(0)} hPa',
-          textSecondary: textSecondary,
-        ),
-        const SizedBox(height: 12.0),
-        _buildWeatherDetailRow(
-          icon: Icons.wb_sunny,
-          label: '紫外线指数',
-          value: _getUVIndexDescription(uvIndex),
-          textSecondary: textSecondary,
-        ),
-        const SizedBox(height: 12.0),
-        _buildWeatherDetailRow(
-          icon: Icons.grain,
-          label: '降水量',
-          value: '${precipitation.toStringAsFixed(1)} mm',
-          textSecondary: textSecondary,
-        ),
-        const SizedBox(height: 12.0),
-        _buildWeatherDetailRow(
-          icon: isDay ? Icons.light_mode : Icons.nightlight_round,
-          label: isDay ? '白天' : '夜晚',
-          value: '',
-          textSecondary: textSecondary,
-        ),
-      ],
-    );
-  }
+    final weatherDesc = _getWeatherDescription(code);
+    List<String> suggestions = [];
 
-  Widget _buildWeatherDetailRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color textSecondary,
-  }) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 20.0,
-          color: textSecondary,
-        ),
-        const SizedBox(width: 12.0),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14.0,
-            color: textSecondary,
-          ),
-        ),
-        const Spacer(),
-        if (value.isNotEmpty)
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14.0,
-              fontWeight: FontWeight.w500,
-              color: textSecondary,
-            ),
-          ),
-      ],
-    );
-  }
-
-  String _getUVIndexDescription(double uvIndex) {
-    if (uvIndex <= 2) return '${uvIndex.toStringAsFixed(1)} (低)';
-    if (uvIndex <= 5) return '${uvIndex.toStringAsFixed(1)} (中等)';
-    if (uvIndex <= 7) return '${uvIndex.toStringAsFixed(1)} (高)';
-    if (uvIndex <= 10) return '${uvIndex.toStringAsFixed(1)} (很高)';
-    return '${uvIndex.toStringAsFixed(1)} (极高)';
-  }
-
-  Widget _buildForecastCard({
-    required Color textPrimary,
-    required Color textSecondary,
-    required bool isDarkMode,
-  }) {
-    if (_weatherData == null) return const SizedBox.shrink();
-
-    final daily = _weatherData!['daily'];
-    final times = daily['time'] as List?;
-    final maxTemps = daily['temperature_2m_max'] as List?;
-    final minTemps = daily['temperature_2m_min'] as List?;
-    final weatherCodes = daily['weather_code'] as List?;
-    final precipitationSums = daily['precipitation_sum'] as List?;
-
-    if (times == null || maxTemps == null || minTemps == null || weatherCodes == null || precipitationSums == null) {
-      return const SizedBox.shrink();
+    if (precipitation > 0.5) {
+      suggestions.add('今天有${precipitation > 10 ? '大雨' : '小雨'}，记得带伞哦~');
+    } else if (weatherDesc == '晴朗') {
+      suggestions.add('今天天气晴朗，适合出门活动~');
+    } else if (weatherDesc == '阴天') {
+      suggestions.add('今天阴天，天气比较舒适~');
+    } else if (weatherDesc == '雾') {
+      suggestions.add('今天有雾，出行请注意安全~');
     }
 
-    final forecastDays = 5;
-    final startIndex = 1;
-
-    return Container(
-      padding: const EdgeInsets.all(24.0),
-      decoration: BoxDecoration(
-        color: isDarkMode 
-            ? Colors.black.withValues(alpha: 0.3)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: isDarkMode 
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.3),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDarkMode 
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 32.0,
-            spreadRadius: 8.0,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '未来5天',
-            style: TextStyle(
-              fontSize: 20.0,
-              fontWeight: FontWeight.bold,
-              color: textPrimary,
-            ),
-          ),
-          const SizedBox(height: 16.0),
-          ...List.generate(forecastDays, (index) {
-            final dataIndex = startIndex + index;
-            if (dataIndex >= times.length || dataIndex >= maxTemps.length || 
-                dataIndex >= minTemps.length || dataIndex >= weatherCodes.length ||
-                dataIndex >= precipitationSums.length) {
-              return const SizedBox.shrink();
-            }
-            
-            final dateStr = times[dataIndex];
-            if (dateStr == null) return const SizedBox.shrink();
-            
-            final date = DateTime.parse(dateStr);
-            final maxTemp = double.tryParse(maxTemps[dataIndex].toString()) ?? 0;
-            final minTemp = double.tryParse(minTemps[dataIndex].toString()) ?? 0;
-            final code = weatherCodes[dataIndex] ?? 0;
-            final precipitation = double.tryParse(precipitationSums[dataIndex].toString()) ?? 0;
-            
-            final weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-            final weekday = weekdays[date.weekday - 1];
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12.0),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 60.0,
-                    child: Text(
-                      weekday,
-                      style: TextStyle(
-                        fontSize: 14.0,
-                        color: textPrimary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    _getWeatherIcon(code),
-                    size: 24.0,
-                    color: textPrimary,
-                  ),
-                  const SizedBox(width: 12.0),
-                  Text(
-                    _getWeatherDescription(code),
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      color: textSecondary,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (precipitation > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Icon(
-                        Icons.grain,
-                        size: 16.0,
-                        color: textSecondary,
-                      ),
-                    ),
-                  Text(
-                    '${maxTemp.toStringAsFixed(0)}° / ${minTemp.toStringAsFixed(0)}°',
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      color: textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCalendarCard({
-    required Color textPrimary,
-    required Color textSecondary,
-    required bool isDarkMode,
-  }) {
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
-    final startWeekday = firstDayOfMonth.weekday;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isLargeScreen = screenWidth > 768;
-    
-    final daysInMonth = lastDayOfMonth.day;
-    final Map<int, String> lunarMap = {};
-    for (var day = 1; day <= daysInMonth; day++) {
-      final date = DateTime(now.year, now.month, day);
-      final lunar = Lunar.fromDate(date);
-      final lunarDay = lunar.getDayInChinese();
-      lunarMap[day] = lunarDay;
+    if (uvIndex >= 6) {
+      suggestions.add('紫外线${uvIndex >= 8 ? '很强' : '较强'}，记得涂防晒霜~');
     }
 
-    return Container(
-      padding: EdgeInsets.all(isLargeScreen ? 32.0 : 24.0),
-      decoration: BoxDecoration(
-        color: isDarkMode 
-            ? Colors.black.withValues(alpha: 0.3)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(
-          color: isDarkMode 
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.grey.withValues(alpha: 0.3),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isDarkMode 
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.1),
-            blurRadius: 32.0,
-            spreadRadius: 8.0,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${now.month}月',
-            style: TextStyle(
-              fontSize: isLargeScreen ? 24.0 : 20.0,
-              fontWeight: FontWeight.bold,
-              color: textPrimary,
-            ),
-          ),
-          SizedBox(height: isLargeScreen ? 20.0 : 16.0),
-          _buildWeekdayHeader(textSecondary, isLargeScreen),
-          SizedBox(height: isLargeScreen ? 12.0 : 8.0),
-          _buildCalendarGrid(
-            firstDayOfMonth: firstDayOfMonth,
-            lastDayOfMonth: lastDayOfMonth,
-            startWeekday: startWeekday,
-            currentDay: now.day,
-            lunarMap: lunarMap,
-            isLargeScreen: isLargeScreen,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            isDarkMode: isDarkMode,
-          ),
-        ],
-      ),
-    );
-  }
+    if (windSpeed >= 20) {
+      suggestions.add('今天风力较大，请注意防范高空坠物风险~');
+    }
 
-  Widget _buildWeekdayHeader(Color textSecondary, bool isLargeScreen) {
-    final weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: weekdays.map((day) {
-        return SizedBox(
-          width: isLargeScreen ? 48.0 : 32.0,
-          child: Center(
-            child: Text(
-              day,
-              style: TextStyle(
-                fontSize: isLargeScreen ? 16.0 : 14.0,
-                color: textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
+    if (temp >= 35) {
+      suggestions.add('今天气温很高，避免长时间户外活动~');
+    } else if (temp <= 10) {
+      suggestions.add('今天气温较低，记得多穿点衣服~');
+    }
 
-  Widget _buildCalendarGrid({
-    required DateTime firstDayOfMonth,
-    required DateTime lastDayOfMonth,
-    required int startWeekday,
-    required int currentDay,
-    required Map<int, String> lunarMap,
-    required bool isLargeScreen,
-    required Color textPrimary,
-    required Color textSecondary,
-    required bool isDarkMode,
-  }) {
-    final daysInMonth = lastDayOfMonth.day;
-    final totalCells = ((startWeekday - 1 + daysInMonth) / 7).ceil() * 7;
+    if (humidity >= 80) {
+      suggestions.add('今天空气湿度较高，感觉会比较闷热~');
+    }
 
-    return Column(
-      children: List.generate(totalCells ~/ 7, (weekIndex) {
-        return Padding(
-          padding: EdgeInsets.only(bottom: isLargeScreen ? 12.0 : 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(7, (dayIndex) {
-              final cellIndex = weekIndex * 7 + dayIndex;
-              final dayNumber = cellIndex - (startWeekday - 1) + 1;
-              final isValidDay = dayNumber > 0 && dayNumber <= daysInMonth;
-              final isToday = isValidDay && dayNumber == currentDay;
-              final lunarDay = isValidDay ? lunarMap[dayNumber] : '';
+    if (suggestions.isEmpty) {
+      suggestions.add('今天天气不错，适合安排户外活动~');
+    }
 
-              return SizedBox(
-                width: isLargeScreen ? 48.0 : 32.0,
-                height: isLargeScreen ? 48.0 : 32.0,
-                child: Center(
-                  child: isValidDay
-                      ? Container(
-                          padding: isToday
-                              ? EdgeInsets.symmetric(horizontal: isLargeScreen ? 10.0 : 5.0)
-                              : EdgeInsets.zero,
-                          decoration: BoxDecoration(
-                            color: isToday
-                                ? (isDarkMode 
-                                    ? Colors.blue.withValues(alpha: 0.8)
-                                    : Colors.blue.withValues(alpha: 1.0))
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(isLargeScreen ? 12.0 : 8.0),
-                            border: isToday
-                                ? Border.all(
-                                    color: isDarkMode 
-                                        ? Colors.white.withValues(alpha: 0.3)
-                                        : Colors.blue.withValues(alpha: 0.3),
-                                    width: 2.0,
-                                  )
-                                : null,
-                            boxShadow: isToday
-                                ? [
-                                    BoxShadow(
-                                      color: isDarkMode 
-                                          ? Colors.blue.withValues(alpha: 0.4)
-                                          : Colors.blue.withValues(alpha: 0.2),
-                                      blurRadius: 8.0,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '$dayNumber',
-                                style: TextStyle(
-                                  fontSize: isLargeScreen ? 14.0 : 12.0,
-                                  color: isToday
-                                      ? Colors.white
-                                      : textPrimary,
-                                  fontWeight: isToday
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                              if (lunarDay != null && lunarDay!.isNotEmpty)
-                                Text(
-                                  lunarDay!,
-                                  style: TextStyle(
-                                    fontSize: isLargeScreen ? 10.0 : 8.0,
-                                    color: isToday
-                                        ? Colors.white.withValues(alpha: 0.9)
-                                        : textSecondary,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-              );
-            }),
-          ),
-        );
-      }),
-    );
+    return '今天$weatherDesc，${temp.toStringAsFixed(1)}°C。${suggestions.join(' ')}';
   }
 }
