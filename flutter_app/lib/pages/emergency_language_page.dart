@@ -1,8 +1,6 @@
 // Emergency language phrases page
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import '../data/language_phrases.dart';
 
@@ -49,8 +47,6 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
       final encodedText = Uri.encodeComponent(text);
       final url = 'https://translate.google.com/translate_tts?ie=UTF-8&q=$encodedText&tl=th&client=tw-ob&ttsspeed=0.5';
 
-      print('Playing from: $url');
-
       // 显示正在播放
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -65,22 +61,12 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
       await _audioPlayer.play(UrlSource(url));
 
       // 监听播放完成
-      _audioPlayer.onPlayerComplete.listen((_) {
+      _audioPlayer.onPlayerComplete.listen((event) {
         setState(() => _isPlaying = false);
       });
 
-      _audioPlayer.onPlayerError.listen((error) {
-        print('Audio error: $error');
-        setState(() => _isPlaying = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('播放失败: $error'),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+      _audioPlayer.onLog.listen((log) {
+        print('Audio log: $log');
       });
 
     } catch (e) {
