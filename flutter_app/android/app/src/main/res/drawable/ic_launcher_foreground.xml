@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="512dp"
+    android:height="512dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#667eea"
+        android:pathData="M256,256m-240,0a240,240 0,1 1,480 0a240,240 0,1 1,-480 0"/>
+
+    <!-- Tool box body -->
+    <path
+        android:fillColor="#ffffff"
+        android:pathData="M144,208h224c8.8,0 16,7.2 16,16v128c0,8.8 -7.2,16 -16,16h-224c-8.8,0 -16,-7.2 -16,-16v-128c0,-8.8 7.2,-16 16,-16z"/>
+
+    <!-- Box lid -->
+    <path
+        android:fillColor="#e8ecf4"
+        android:pathData="M128,176h256c8.8,0 16,7.2 16,16v32h-288v-32c0,-8.8 7.2,-16 16,-16z"/>
+
+    <!-- Handle base -->
+    <path
+        android:fillColor="#667eea"
+        android:pathData="M232,144h48c4.4,0 8,3.6 8,8v16h-64v-16c0,-4.4 3.6,-8 8,-8z"/>
+
+    <!-- Keyhole circle -->
+    <path
+        android:fillColor="#667eea"
+        android:pathData="M256,256m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0"/>
+
+    <!-- Keyhole slot -->
+    <path
+        android:fillColor="#667eea"
+        android:pathData="M248,272h16c2.2,0 4,1.8 4,4v32c0,2.2 -1.8,4 -4,4h-16c-2.2,0 -4,-1.8 -4,-4v-32c0,-2.2 1.8,-4 4,-4z"/>
+
+    <!-- Wrench (left tool) -->
+    <path
+        android:fillColor="#764ba2"
+        android:pathData="M168,320l16,0l0,-8l-8,-8l-8,0l0,16zM176,320l0,32c0,2.2 -1.8,4 -4,4l-8,0c-2.2,0 -4,-1.8 -4,-4l0,-32l16,0z"/>
+
+    <!-- Screwdriver (right tool) -->
+    <path
+        android:fillColor="#764ba2"
+        android:pathData="M328,304l0,-16c0,-2.2 1.8,-4 4,-4l8,0c2.2,0 4,1.8 4,4l0,16l-8,0l0,48l-8,0l0,-48z"/>
+
+</vector>
