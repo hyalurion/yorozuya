@@ -15,6 +15,16 @@ class LanguagePhrase {
     required this.romanization,
     this.note = '',
   });
+
+  String thaiWithHonorific({required bool isMale}) {
+    final trimmed = thai.trim();
+    final normalized = trimmed.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '');
+    if (normalized.contains('ครับ') || normalized.contains('ค่ะ') || normalized.contains('คะ') || normalized.contains('คร้า')) {
+      return trimmed;
+    }
+    final suffix = isMale ? 'ครับ' : 'ค่ะ';
+    return '$trimmed $suffix';
+  }
 }
 
 class LanguageScene {

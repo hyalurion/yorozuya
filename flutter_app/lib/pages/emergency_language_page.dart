@@ -12,11 +12,18 @@ class EmergencyLanguagePage extends StatefulWidget {
   State<EmergencyLanguagePage> createState() => _EmergencyLanguagePageState();
 }
 
+class _PhraseEntry {
+  final int sceneIdx;
+  final int phraseIdx;
+
+  const _PhraseEntry(this.sceneIdx, this.phraseIdx);
+}
+
 class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
   VoiceType _voiceType = VoiceType.male;
   final Set<int> _selectedScenes = {};
   final Set<int> _selectedPhrases = {};
-  List<LanguagePhrase> _generatedPhrases = [];
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -45,28 +52,30 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
               _buildVoiceTypeSelector(),
               const SizedBox(height: 24),
 
+              // Search input
+              _buildSectionTitle(context, '搜索表达'),
+              const SizedBox(height: 12),
+              _buildSearchBar(),
+              const SizedBox(height: 24),
+
               // Scene selector
               _buildSectionTitle(context, '选择场景'),
               const SizedBox(height: 12),
               _buildSceneSelector(),
               const SizedBox(height: 24),
 
-              // Phrase selector (if scenes selected)
-              if (_selectedScenes.isNotEmpty) ...[
-                _buildSectionTitle(context, '选择表达'),
+              // Phrase selector (if scenes selected or search active)
+              if (_selectedScenes.isNotEmpty || _searchQuery.isNotEmpty) ...[
+                _buildSectionTitle(context, '表达列表'),
                 const SizedBox(height: 12),
                 _buildPhraseSelector(),
                 const SizedBox(height: 24),
               ],
 
-              // Generate button
-              if (_selectedPhrases.isNotEmpty)
-                _buildGenerateButton(context),
-
-              // Generated phrases
-              if (_generatedPhrases.isNotEmpty) ...[
+              // Selected phrases display
+              if (_selectedPhrases.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                _buildGeneratedResult(context),
+                _buildSelectedPhrasesSection(context),
               ],
 
               const SizedBox(height: 40),
@@ -201,34 +210,38 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
     );
   }
 
+  Widget _buildSearchBar() {
+    return TextField(
+      onChanged: (value) => setState(() => _searchQuery = value),
+      decoration: InputDecoration(
+        hintText: '输入中文、泰文或关键词搜索',
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        filled: true,
+      ),
+    );
+  }
+
   Widget _buildSceneSelector() {
     return Wrap(
       spacing: 10,
       runSpacing: 10,
       children: thaiScenes.map((scene) {
-        final isSelected = _selectedScenes.contains(thaiScenes.indexOf(scene));
+        final sceneIdx = thaiScenes.indexOf(scene);
+        final isSelected = _selectedScenes.contains(sceneIdx);
         return GestureDetector(
           onTap: () {
             setState(() {
               if (isSelected) {
-                _selectedScenes.remove(thaiScenes.indexOf(scene));
+                _selectedScenes.remove(sceneIdx);
                 _selectedPhrases.removeWhere((idx) {
-                  // Remove phrases from this scene
-                  int phraseIdx = idx;
-                  int sceneIdx = 0;
-                  int count = 0;
-                  for (int i = 0; i < thaiScenes.length; i++) {
-                    if (phraseIdx < thaiScenes[i].phrases.length) {
-                      sceneIdx = i;
-                      count = phraseIdx;
-                      break;
-                    }
-                    phraseIdx -= thaiScenes[i].phrases.length;
-                  }
-                  return sceneIdx == thaiScenes.indexOf(scene);
+                  final indices = _getSceneAndPhraseIndex(idx);
+                  return indices?.$1 == sceneIdx;
                 });
               } else {
-                _selectedScenes.add(thaiScenes.indexOf(scene));
+                _selectedScenes.add(sceneIdx);
               }
             });
           },
@@ -268,79 +281,128 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
   }
 
   Widget _buildPhraseSelector() {
-    List<Widget> phraseWidgets = [];
-    for (int sceneIdx in _selectedScenes) {
-      final scene = thaiScenes[sceneIdx];
-      for (int phraseIdx = 0; phraseIdx < scene.phrases.length; phraseIdx++) {
-        final globalIdx = _getGlobalPhraseIndex(sceneIdx, phraseIdx);
-        final phrase = scene.phrases[phraseIdx];
-        final isSelected = _selectedPhrases.contains(globalIdx);
+    final visiblePhrases = _getVisiblePhraseEntries();
 
-        phraseWidgets.add(
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                if (isSelected) {
-                  _selectedPhrases.remove(globalIdx);
-                } else {
-                  _selectedPhrases.add(globalIdx);
-                }
-              });
-            },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
+    if (visiblePhrases.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Text(
+          '没有找到匹配的表达。请尝试更换关键词或选择其他场景。',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: visiblePhrases.map((entry) {
+        final scene = thaiScenes[entry.sceneIdx];
+        final phrase = scene.phrases[entry.phraseIdx];
+        final globalIdx = _getGlobalPhraseIndex(entry.sceneIdx, entry.phraseIdx);
+        final isSelected = _selectedPhrases.contains(globalIdx);
+        final thai = phrase.thaiWithHonorific(isMale: _voiceType == VoiceType.male);
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedPhrases.remove(globalIdx);
+              } else {
+                _selectedPhrases.add(globalIdx);
+              }
+            });
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.45)
+                  : Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
                 color: isSelected
-                    ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5)
-                    : Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                ),
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                width: isSelected ? 1.8 : 1,
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    isSelected ? Icons.check_circle : Icons.circle_outlined,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.outline,
-                    size: 22,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        phrase.chinese,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      isSelected ? Icons.check_circle : Icons.circle_outlined,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline,
+                      size: 22,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  thai,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.78),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          phrase.chinese,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          phrase.thai,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  phrase.romanization,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
+                ),
+                if (phrase.note.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      phrase.note,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
+                      ),
                     ),
                   ),
                 ],
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  '场景：${scene.name}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                  ),
+                ),
+              ],
             ),
           ),
         );
-      }
-    }
-    return Column(children: phraseWidgets);
+      }).toList(),
+    );
   }
 
   int _getGlobalPhraseIndex(int sceneIdx, int phraseIdx) {
@@ -362,47 +424,53 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
     return null;
   }
 
-  Widget _buildGenerateButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: _generatePhrases,
-        icon: const Icon(Icons.auto_awesome),
-        label: Text('生成表达 (${_selectedPhrases.length}句)'),
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
-  }
+  List<_PhraseEntry> _getVisiblePhraseEntries() {
+    final query = _searchQuery.trim().toLowerCase();
+    final sceneIndices = _selectedScenes.isNotEmpty
+        ? _selectedScenes.toList()
+        : List<int>.generate(thaiScenes.length, (index) => index);
 
-  void _generatePhrases() {
-    setState(() {
-      _generatedPhrases = [];
-      for (int globalIdx in _selectedPhrases) {
-        final indices = _getSceneAndPhraseIndex(globalIdx);
-        if (indices != null) {
-          _generatedPhrases.add(thaiScenes[indices.$1].phrases[indices.$2]);
+    final visible = <_PhraseEntry>[];
+    for (final sceneIdx in sceneIndices) {
+      final scene = thaiScenes[sceneIdx];
+      final sceneMatch = query.isNotEmpty &&
+          (scene.name.toLowerCase().contains(query) || scene.description.toLowerCase().contains(query));
+      for (int phraseIdx = 0; phraseIdx < scene.phrases.length; phraseIdx++) {
+        final phrase = scene.phrases[phraseIdx];
+        final phraseMatch = query.isEmpty ||
+            phrase.chinese.toLowerCase().contains(query) ||
+            phrase.thai.toLowerCase().contains(query) ||
+            phrase.romanization.toLowerCase().contains(query) ||
+            phrase.note.toLowerCase().contains(query);
+        if (query.isEmpty || sceneMatch || phraseMatch) {
+          visible.add(_PhraseEntry(sceneIdx, phraseIdx));
         }
       }
-    });
+    }
+    return visible;
   }
 
-  Widget _buildGeneratedResult(BuildContext context) {
+  Widget _buildSelectedPhrasesSection(BuildContext context) {
+    final selectedPhrases = _selectedPhrases
+        .map((globalIdx) {
+          final indices = _getSceneAndPhraseIndex(globalIdx);
+          return indices == null ? null : thaiScenes[indices.$1].phrases[indices.$2];
+        })
+        .whereType<LanguagePhrase>()
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(context, '生成的表达'),
+        _buildSectionTitle(context, '已选择表达'),
         const SizedBox(height: 12),
-        ..._generatedPhrases.map((phrase) => _buildPhraseCard(context, phrase)),
+        ...selectedPhrases.map((phrase) => _buildPhraseCard(context, phrase)),
       ],
     );
   }
 
   Widget _buildPhraseCard(BuildContext context, LanguagePhrase phrase) {
+    final thai = phrase.thaiWithHonorific(isMale: _voiceType == VoiceType.male);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -468,7 +536,7 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  phrase.thai,
+                  thai,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
@@ -476,7 +544,7 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
                 ),
               ),
               IconButton(
-                onPressed: () => _copyToClipboard(phrase.thai),
+                onPressed: () => _copyToClipboard(thai),
                 icon: const Icon(Icons.copy, size: 20),
                 tooltip: '复制泰语',
               ),
@@ -523,6 +591,24 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
               ],
             ),
           ),
+          if (phrase.note.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                phrase.note,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
