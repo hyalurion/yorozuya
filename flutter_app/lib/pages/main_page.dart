@@ -50,14 +50,14 @@ class _MainPageState extends State<MainPage> {
   
   final List<IconData> _icons = [
     Icons.home_outlined,
-    Icons.calculate_outlined,
+    Icons.handyman_outlined,
     Icons.restaurant_outlined,
     Icons.settings_outlined,
   ];
   
   final List<IconData> _activeIcons = [
     Icons.home,
-    Icons.calculate,
+    Icons.handyman,
     Icons.restaurant,
     Icons.settings,
   ];

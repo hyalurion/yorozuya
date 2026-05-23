@@ -118,10 +118,10 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
               _buildLanguageSelector(),
               const SizedBox(height: 24),
 
-              // Voice type selector
-              _buildSectionTitle(context, '选择发音'),
+              // Gender selector
+              _buildSectionTitle(context, '性别偏好'),
               const SizedBox(height: 12),
-              _buildVoiceTypeSelector(),
+              _buildGenderSelector(),
               const SizedBox(height: 24),
 
               // Search input
@@ -213,14 +213,14 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
     );
   }
 
-  Widget _buildVoiceTypeSelector() {
+  Widget _buildGenderSelector() {
     return Row(
       children: [
         Expanded(
           child: _buildVoiceOption(
             VoiceType.male,
             '🧑',
-            '男声',
+            '男',
             'ผู้ชาย',
           ),
         ),
@@ -229,7 +229,7 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
           child: _buildVoiceOption(
             VoiceType.female,
             '👩',
-            '女声',
+            '女',
             'ผู้หญิง',
           ),
         ),

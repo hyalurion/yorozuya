@@ -12,7 +12,7 @@ class CalculatorSelectionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('计算器'),
+        title: const Text('工具箱'),
         backgroundColor: Colors.transparent,
         foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
