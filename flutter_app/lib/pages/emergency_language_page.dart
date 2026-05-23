@@ -1,7 +1,9 @@
 // Emergency language phrases page
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'package:http/http.dart' as http;
+import 'package:audioplayers/audioplayers.dart';
 import '../data/language_phrases.dart';
 
 enum VoiceType { male, female }
@@ -25,137 +27,65 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
   final Set<int> _selectedScenes = {};
   final Set<int> _selectedPhrases = {};
   String _searchQuery = '';
-  final FlutterTts _flutterTts = FlutterTts();
-  bool _isTtsInitialized = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initTts();
-  }
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isPlaying = false;
 
   @override
   void dispose() {
-    _flutterTts.stop();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  Future<void> _initTts() async {
-    try {
-      // 设置回调
-      _flutterTts.setCompletionHandler(() {
-        print('TTS Completed');
-      });
-
-      _flutterTts.setErrorHandler((msg) {
-        print('TTS Error: $msg');
-      });
-
-      _flutterTts.setCancelHandler(() {
-        print('TTS Cancelled');
-      });
-
-      // 先获取所有引擎
-      final engines = await _flutterTts.getEngines;
-      print('Available engines: $engines');
-
-      // 尝试使用 Google 引擎
-      bool engineSet = false;
-      for (final engine in engines) {
-        if (engine['name'].toString().contains('google')) {
-          await _flutterTts.setEngine(engine['name']);
-          print('Set engine: ${engine['name']}');
-          engineSet = true;
-          break;
-        }
-      }
-
-      // 获取可用语言
-      final languages = await _flutterTts.getLanguages;
-      print('Available languages: $languages');
-
-      // 尝试多种泰语代码
-      bool languageSet = false;
-      final possibleLanguages = ['th-TH', 'th', 'th_TH', 'th-th'];
-
-      for (final lang in possibleLanguages) {
-        try {
-          final isAvailable = await _flutterTts.isLanguageAvailable(lang);
-          if (isAvailable) {
-            final result = await _flutterTts.setLanguage(lang);
-            print('Set language $lang result: $result');
-            languageSet = true;
-            break;
-          }
-        } catch (e) {
-          print('Error trying language $lang: $e');
-        }
-      }
-
-      if (!languageSet) {
-        print('Could not set Thai language, using default');
-      }
-
-      // 设置默认参数
-      await _flutterTts.setSpeechRate(0.5);
-      await _flutterTts.setVolume(1.0);
-      await _flutterTts.setPitch(1.0);
-
-      setState(() => _isTtsInitialized = true);
-      print('TTS initialized successfully');
-    } catch (e) {
-      print('Error initializing TTS: $e');
-      setState(() => _isTtsInitialized = false);
-    }
-  }
-
+  // Google Translate TTS API 发音
   Future<void> _speak(String text) async {
-    if (!_isTtsInitialized) {
-      await _initTts();
-    }
-
-    if (!_isTtsInitialized) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('TTS 未初始化，请重试'),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      return;
+    if (_isPlaying) {
+      await _audioPlayer.stop();
     }
 
     try {
-      // 停止之前的播放
-      await _flutterTts.stop();
+      setState(() => _isPlaying = true);
 
-      // 调整语音参数，男/女声
-      if (_voiceType == VoiceType.male) {
-        await _flutterTts.setPitch(0.8);
-      } else {
-        await _flutterTts.setPitch(1.2);
-      }
+      // Google Translate TTS API
+      final encodedText = Uri.encodeComponent(text);
+      final url = 'https://translate.google.com/translate_tts?ie=UTF-8&q=$encodedText&tl=th&client=tw-ob&ttsspeed=0.5';
 
-      await _flutterTts.setVolume(1.0);
-      await _flutterTts.setSpeechRate(0.5);
+      print('Playing from: $url');
 
-      print('About to speak: $text');
-      final result = await _flutterTts.speak(text);
-      print('Speak returned: $result');
-
+      // 显示正在播放
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('正在播放...'),
+            content: Text('正在加载语音...'),
             duration: Duration(seconds: 1),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
+
+      await _audioPlayer.play(UrlSource(url));
+
+      // 监听播放完成
+      _audioPlayer.onPlayerComplete.listen((_) {
+        setState(() => _isPlaying = false);
+      });
+
+      _audioPlayer.onPlayerError.listen((error) {
+        print('Audio error: $error');
+        setState(() => _isPlaying = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('播放失败: $error'),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      });
+
     } catch (e) {
-      print('Error speaking: $e');
+      print('Error in speak: $e');
+      setState(() => _isPlaying = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
