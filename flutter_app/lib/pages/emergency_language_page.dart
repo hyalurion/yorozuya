@@ -1,6 +1,7 @@
 // Emergency language phrases page
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../data/language_phrases.dart';
 
 enum VoiceType { male, female }
@@ -24,6 +25,51 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
   final Set<int> _selectedScenes = {};
   final Set<int> _selectedPhrases = {};
   String _searchQuery = '';
+  final FlutterTts _flutterTts = FlutterTts();
+  bool _isTtsInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTts();
+  }
+
+  @override
+  void dispose() {
+    _flutterTts.stop();
+    super.dispose();
+  }
+
+  Future<void> _initTts() async {
+    await _flutterTts.setLanguage('th-TH');
+    await _flutterTts.setSpeechRate(0.5);
+    await _flutterTts.setPitch(1.0);
+    setState(() => _isTtsInitialized = true);
+  }
+
+  Future<void> _speak(String text) async {
+    if (!_isTtsInitialized) return;
+    // 调整语音参数，男/女声
+    if (_voiceType == VoiceType.male) {
+      await _flutterTts.setPitch(0.8);
+    } else {
+      await _flutterTts.setPitch(1.2);
+    }
+    await _flutterTts.speak(text);
+  }
+
+  void _showFullScreenPhrase(LanguagePhrase phrase) {
+    final thai = phrase.thaiWithHonorific(isMale: _voiceType == VoiceType.male);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FullScreenPhraseDisplay(
+          phrase: phrase,
+          thaiText: thai,
+          onSpeak: () => _speak(thai),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -544,9 +590,19 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
                 ),
               ),
               IconButton(
+                onPressed: () => _speak(thai),
+                icon: const Icon(Icons.volume_up, size: 20),
+                tooltip: '播放发音',
+              ),
+              IconButton(
                 onPressed: () => _copyToClipboard(thai),
                 icon: const Icon(Icons.copy, size: 20),
                 tooltip: '复制泰语',
+              ),
+              IconButton(
+                onPressed: () => _showFullScreenPhrase(phrase),
+                icon: const Icon(Icons.fullscreen, size: 20),
+                tooltip: '全屏展示',
               ),
             ],
           ),
@@ -621,6 +677,152 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
         content: Text('已复制: $text'),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
+
+class FullScreenPhraseDisplay extends StatefulWidget {
+  final LanguagePhrase phrase;
+  final String thaiText;
+  final VoidCallback onSpeak;
+
+  const FullScreenPhraseDisplay({
+    super.key,
+    required this.phrase,
+    required this.thaiText,
+    required this.onSpeak,
+  });
+
+  @override
+  State<FullScreenPhraseDisplay> createState() => _FullScreenPhraseDisplayState();
+}
+
+class _FullScreenPhraseDisplayState extends State<FullScreenPhraseDisplay> {
+  @override
+  void initState() {
+    super.initState();
+    // 进入时自动设置为横屏
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    // 离开时恢复为竖屏
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: GestureDetector(
+          onTap: widget.onSpeak,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            padding: const EdgeInsets.all(40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 中文
+                Text(
+                  widget.phrase.chinese,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                // 泰语（大号字体）
+                Text(
+                  widget.thaiText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 80,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 40),
+                // 罗马拼音
+                Text(
+                  widget.phrase.romanization,
+                  style: const TextStyle(
+                    color: Colors.white60,
+                    fontSize: 28,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (widget.phrase.note.isNotEmpty) ...[
+                  const SizedBox(height: 30),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white10,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      widget.phrase.note,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 20,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 60),
+                // 操作按钮
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: widget.onSpeak,
+                      icon: const Icon(Icons.volume_up, size: 32),
+                      label: const Text('播放', style: TextStyle(fontSize: 20)),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 32),
+                      label: const Text('关闭', style: TextStyle(fontSize: 20)),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                        backgroundColor: Colors.grey[700],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -18,11 +18,17 @@ class LanguagePhrase {
 
   String thaiWithHonorific({required bool isMale}) {
     final trimmed = thai.trim();
-    final normalized = trimmed.replaceAll(RegExp(r'[\s\p{P}]', unicode: true), '');
-    if (normalized.contains('ครับ') || normalized.contains('ค่ะ') || normalized.contains('คะ') || normalized.contains('คร้า')) {
+    // 检查是否已经包含敬语后缀
+    if (trimmed.endsWith('ครับ') || trimmed.endsWith('ค่ะ') || trimmed.endsWith('คะ') || trimmed.endsWith('คร้า')) {
       return trimmed;
     }
+    // 根据性别添加正确的敬语
     final suffix = isMale ? 'ครับ' : 'ค่ะ';
+    // 如果有标点符号，在标点前添加
+    final lastChar = trimmed.isNotEmpty ? trimmed.substring(trimmed.length - 1) : '';
+    if (RegExp(r'[!\.?，。？！]').hasMatch(lastChar)) {
+      return '${trimmed.substring(0, trimmed.length - 1)} $suffix$lastChar';
+    }
     return '$trimmed $suffix';
   }
 }

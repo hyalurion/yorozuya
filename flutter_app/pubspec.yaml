@@ -63,6 +63,9 @@ dependencies:
   
   # Currency exchange SDK (160+ currencies, offline-first)
   currency_sdk: ^1.0.1
+  
+  # 文本转语音
+  flutter_tts: ^4.0.2
 
 dev_dependencies:
   flutter_test:
