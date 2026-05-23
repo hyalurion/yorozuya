@@ -1,232 +1,121 @@
-# 万事屋
+# 万事屋（Yorozuya）Flutter 版本
 
 ## 📋 项目简介
 
+本仓库包含一个基于 Flutter 的工具型应用“万事屋”，主要覆盖日常信息展示、生活工具和出行助手。
+
+应用目标：
+- 将日常时间、天气、农历信息聚合到首页
+- 提供便捷的价格比较和应急语言表达
+- 支持随机餐食建议与主题设置
 
 ## ✨ 主要功能
 
-- ✅ **服务管理** - 添加、编辑、删除服务链接
-- ✅ **WebView 浏览** - 在应用内直接打开服务网页
-- ✅ **本地存储** - 自动保存服务列表，离线可用
-- ✅ **美观界面** - Material Design 3 设计风格
-- ✅ **自定义配置** - 自由选择图标、颜色、名称
-- ✅ **默认服务** - 预设记账、金流、库存等服务
+- ✅ 首页仪表盘：当前时间、日期、农历、天气概览和智能建议
+- ✅ 工具箱：价格比较器与生活用语急救箱
+- ✅ 今日吃什么：随机食物转盘
+- ✅ 主题设置：亮色 / 暗色 / 跟随系统，并保存用户选择
 
-## 🎨 预设服务
-
-- 📊 **记账** - http://192.168.0.197:3010
-- 🌍 **记账（国际版）** - http://192.168.0.197:3000
-- 💰 **金流** - http://192.168.0.197:3100
-- 📦 **库存** - http://192.168.0.197:5000
-
-## 🛠️ 技术栈
-
-- **Flutter 3.35.4** - 跨平台 UI 框架
-- **Dart 3.9.2** - 编程语言
-- **Provider 6.1.5+1** - 状态管理
-- **SharedPreferences 2.5.3** - 本地键值存储
-- **WebView Flutter 4.13.0** - WebView 组件
-- **URL Launcher** - URL 启动工具
-
-## 📁 项目结构
+## 📁 当前目录结构
 
 ```
 flutter_app/
 ├── lib/
-│   ├── models/
-│   │   └── service_item.dart          # 服务项数据模型
-│   ├── providers/
-│   │   └── service_provider.dart      # 服务管理 Provider
-│   ├── pages/
-│   │   ├── home_page.dart             # 主页面（服务网格）
-│   │   ├── webview_page.dart          # WebView 浏览页面
-│   │   └── edit_service_page.dart     # 编辑/添加服务页面
-│   └── main.dart                       # 应用入口
-├── assets/
-│   └── icons/
-│       └── app_icon.png                # 应用图标（来自原项目）
-├── android/                            # Android 配置
-├── web/                                # Web 配置
-├── pubspec.yaml                        # 依赖配置
-└── README.md                           # 项目说明
+│   ├── components/        # 复用 UI 组件
+│   ├── data/              # 数据层、API、短语库、汇率等
+│   ├── models/            # 数据模型定义
+│   ├── pages/             # 页面视图
+│   ├── providers/         # Provider 状态管理
+│   ├── utils/             # 工具类与辅助函数
+│   └── main.dart          # 应用入口
+├── assets/                # 应用资源文件
+├── android/               # Android 原生配置
+├── ios/                   # iOS 原生配置
+├── macos/                 # macOS 原生配置
+├── web/                   # Web 配置
+├── windows/               # Windows 原生配置
+└── pubspec.yaml           # 依赖与版本配置
 ```
 
-## 🚀 快速开始
+## 🔧 技术栈
+
+- Flutter
+- Dart
+- Provider
+- SharedPreferences
+- HTTP
+- Geolocator
+- Lunar
+- package_info_plus
+
+## 🚀 快速上手
 
 ### 环境要求
 
-- Flutter SDK 3.35.4+
-- Dart SDK 3.9.2+
+- Flutter SDK 3.5.0 及以上
+- Dart SDK 3.9 及以上
 - Android Studio / VS Code
-- JDK 17+（用于 Android 构建）
+- JDK 17+
 
-### 安装步骤
+### 安装与运行
 
-1. **克隆或解压项目**
-   ```bash
-   # 如果从 tar.gz 解压
-   tar -xzf yorozuya-flutter.tar.gz
-   cd flutter_app
-   ```
-
-2. **安装依赖**
-   ```bash
-   flutter pub get
-   ```
-
-3. **运行应用**
-   
-   **Web 预览（推荐用于快速测试）：**
-   ```bash
-   flutter run -d chrome --release
-   ```
-   
-   **Android 设备：**
-   ```bash
-   flutter run -d <device-id> --release
-   ```
-   
-   **构建 APK：**
-   ```bash
-   flutter build apk --release
-   ```
-   
-   构建完成后，APK 文件位于：
-   `build/app/outputs/flutter-apk/app-release.apk`
-
-## 📱 使用说明
-
-### 1. 主页面
-
-- 显示所有已添加的服务卡片
-- 点击卡片即可在 WebView 中打开服务
-- 长按卡片可编辑或删除服务
-- 点击右下角「+」按钮添加新服务
-
-### 2. 添加服务
-
-1. 点击主页面右下角的「添加服务」按钮
-2. 填写服务名称和 URL
-3. 选择喜欢的图标和颜色
-4. 可选填写服务描述
-5. 点击「添加服务」保存
-
-### 3. 编辑服务
-
-1. 在主页面长按服务卡片
-2. 选择「编辑服务」
-3. 修改相关信息
-4. 点击「保存修改」
-
-### 4. 删除服务
-
-1. 在主页面长按服务卡片
-2. 选择「删除服务」
-3. 确认删除
-
-## 🔧 配置说明
-
-### 修改默认服务
-
-编辑 `lib/providers/service_provider.dart` 文件中的 `_getDefaultServices()` 方法：
-
-```dart
-List<ServiceItem> _getDefaultServices() {
-  return [
-    ServiceItem(
-      id: 'your_service_id',
-      name: '服务名称',
-      url: 'http://your-service-url',
-      icon: Icons.your_icon,
-      color: const Color(0xFFyourcolor),
-      description: '服务描述',
-    ),
-    // 添加更多服务...
-  ];
-}
+```bash
+cd d:/chronie-app/universal-lancher/flutter_app
+flutter pub get
+flutter run -d chrome
 ```
 
-### 修改应用图标
+运行到 Android 设备：
 
-替换以下文件：
-- `assets/icons/app_icon.png` - Flutter 资源图标
-- `android/app/src/main/res/mipmap-*/ic_launcher.png` - Android 启动图标
-
-### 修改应用名称
-
-编辑 `android/app/src/main/AndroidManifest.xml`：
-
-```xml
-<application
-    android:label="万事屋"
-    ...>
+```bash
+flutter run -d <device-id>
 ```
 
-## 📦 构建发布版本
+### 常用调试命令
+
+```bash
+flutter clean
+flutter pub get
+flutter analyze
+flutter test
+```
+
+## 📱 核心页面
+
+- `lib/main.dart`：应用入口，初始化 Provider 和主题
+- `lib/pages/main_page.dart`：主导航页面（首页、工具箱、今日吃什么、设置）
+- `lib/pages/home_page.dart`：首页内容，包含天气、时间、农历与建议
+- `lib/pages/calculator_selection_page.dart`：工具箱入口
+- `lib/pages/price_comparison_page.dart`：价格比较器
+- `lib/pages/emergency_language_page.dart`：生活用语急救箱
+- `lib/pages/food_page.dart`：今日吃什么转盘
+- `lib/pages/settings_page.dart`：主题与应用设置
+
+## 🧠 说明
+
+- 首页天气数据使用 `open-meteo.com`，定位不可用时会使用默认坐标。
+- 主题设置通过 `SharedPreferences` 保存，切换后会在下次启动时继续保留。
+- 项目核心结构已与当前代码一致，旧版服务管理说明已移除。
+
+## 📦 构建发布
 
 ### Android APK
 
 ```bash
-# 构建 Release APK
 flutter build apk --release
-
-# APK 输出位置
-# build/app/outputs/flutter-apk/app-release.apk
 ```
 
-### Android App Bundle (AAB)
+### Web
 
 ```bash
-# 构建 Release AAB（用于 Google Play）
-flutter build appbundle --release
-
-# AAB 输出位置
-# build/app/outputs/bundle/release/app-release.aab
-```
-
-### Web 版本
-
-```bash
-# 构建 Web Release
 flutter build web --release
-
-# 输出位置
-# build/web/
 ```
 
-## 🐛 常见问题
+## 💡 备注
 
-### 1. WebView 加载失败
+如果遇到依赖问题，可先执行：
 
-- 检查服务 URL 是否正确
-- 确保设备可以访问目标服务器
-- 检查网络连接
-
-### 2. 图标不显示
-
-- 尝试使用 `--no-tree-shake-icons` 参数构建
-- 清除构建缓存：`flutter clean && flutter pub get`
-
-### 3. 服务列表不保存
-
-- 检查应用是否有存储权限
-- 确保 SharedPreferences 初始化成功
-
-## 📄 开源协议
-
-本项目遵循原项目的开源协议。
-
-## 🙏 致谢
-
-- 感谢原项目 [yorozuya](https://github.com/hyalurion-shizutoki/yorozuya) 的创建者
-- 感谢 Flutter 和 Dart 团队提供优秀的开发框架
-
-## 📞 联系方式
-
-如有问题或建议，请通过以下方式联系：
-
-- 原项目 Issues: https://github.com/hyalurion-shizutoki/yorozuya/issues
-
----
-
-**享受使用万事屋 Flutter 版本！** 🎉
+```bash
+flutter clean
+flutter pub get
+```
