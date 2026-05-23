@@ -41,21 +41,131 @@ class _EmergencyLanguagePageState extends State<EmergencyLanguagePage> {
   }
 
   Future<void> _initTts() async {
-    await _flutterTts.setLanguage('th-TH');
-    await _flutterTts.setSpeechRate(0.5);
-    await _flutterTts.setPitch(1.0);
-    setState(() => _isTtsInitialized = true);
+    try {
+      // 设置回调
+      _flutterTts.setCompletionHandler(() {
+        print('TTS Completed');
+      });
+
+      _flutterTts.setErrorHandler((msg) {
+        print('TTS Error: $msg');
+      });
+
+      _flutterTts.setCancelHandler(() {
+        print('TTS Cancelled');
+      });
+
+      // 先获取所有引擎
+      final engines = await _flutterTts.getEngines;
+      print('Available engines: $engines');
+
+      // 尝试使用 Google 引擎
+      bool engineSet = false;
+      for (final engine in engines) {
+        if (engine['name'].toString().contains('google')) {
+          await _flutterTts.setEngine(engine['name']);
+          print('Set engine: ${engine['name']}');
+          engineSet = true;
+          break;
+        }
+      }
+
+      // 获取可用语言
+      final languages = await _flutterTts.getLanguages;
+      print('Available languages: $languages');
+
+      // 尝试多种泰语代码
+      bool languageSet = false;
+      final possibleLanguages = ['th-TH', 'th', 'th_TH', 'th-th'];
+
+      for (final lang in possibleLanguages) {
+        try {
+          final isAvailable = await _flutterTts.isLanguageAvailable(lang);
+          if (isAvailable) {
+            final result = await _flutterTts.setLanguage(lang);
+            print('Set language $lang result: $result');
+            languageSet = true;
+            break;
+          }
+        } catch (e) {
+          print('Error trying language $lang: $e');
+        }
+      }
+
+      if (!languageSet) {
+        print('Could not set Thai language, using default');
+      }
+
+      // 设置默认参数
+      await _flutterTts.setSpeechRate(0.5);
+      await _flutterTts.setVolume(1.0);
+      await _flutterTts.setPitch(1.0);
+
+      setState(() => _isTtsInitialized = true);
+      print('TTS initialized successfully');
+    } catch (e) {
+      print('Error initializing TTS: $e');
+      setState(() => _isTtsInitialized = false);
+    }
   }
 
   Future<void> _speak(String text) async {
-    if (!_isTtsInitialized) return;
-    // 调整语音参数，男/女声
-    if (_voiceType == VoiceType.male) {
-      await _flutterTts.setPitch(0.8);
-    } else {
-      await _flutterTts.setPitch(1.2);
+    if (!_isTtsInitialized) {
+      await _initTts();
     }
-    await _flutterTts.speak(text);
+
+    if (!_isTtsInitialized) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('TTS 未初始化，请重试'),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      // 停止之前的播放
+      await _flutterTts.stop();
+
+      // 调整语音参数，男/女声
+      if (_voiceType == VoiceType.male) {
+        await _flutterTts.setPitch(0.8);
+      } else {
+        await _flutterTts.setPitch(1.2);
+      }
+
+      await _flutterTts.setVolume(1.0);
+      await _flutterTts.setSpeechRate(0.5);
+
+      print('About to speak: $text');
+      final result = await _flutterTts.speak(text);
+      print('Speak returned: $result');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('正在播放...'),
+            duration: Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error speaking: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('播放失败: $e'),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _showFullScreenPhrase(LanguagePhrase phrase) {
