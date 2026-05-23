@@ -31,7 +31,7 @@ void updatePubspecYaml(String version) {
   List<String> possiblePaths = [
     '$scriptDir/pubspec.yaml',
     '$scriptDir/../pubspec.yaml',
-    'd:/chronie-app/universal-lancher/flutter_app/pubspec.yaml' // 绝对路径作为后备
+    'd:/hyalurion-app/yorozuya/flutter_app/pubspec.yaml' // 绝对路径作为后备
   ];
   
   File? file;

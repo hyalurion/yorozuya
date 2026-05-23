@@ -1,10 +1,7 @@
-# 统一启动器 - Flutter 原生版本
-
-> 从网页应用移植到 Flutter 原生客户端（主要针对 Android 平台）
+# 万事屋
 
 ## 📋 项目简介
 
-这是原 [universal-lancher](https://github.com/chronie-shizutoki/universal-lancher) 网页应用的 Flutter 原生版本，提供了更流畅的用户体验和更强大的功能。
 
 ## ✨ 主要功能
 
@@ -68,7 +65,7 @@ flutter_app/
 1. **克隆或解压项目**
    ```bash
    # 如果从 tar.gz 解压
-   tar -xzf universal-launcher-flutter.tar.gz
+   tar -xzf yorozuya-flutter.tar.gz
    cd flutter_app
    ```
 
@@ -161,7 +158,7 @@ List<ServiceItem> _getDefaultServices() {
 
 ```xml
 <application
-    android:label="统一启动器"
+    android:label="万事屋"
     ...>
 ```
 
@@ -221,15 +218,15 @@ flutter build web --release
 
 ## 🙏 致谢
 
-- 感谢原项目 [universal-lancher](https://github.com/chronie-shizutoki/universal-lancher) 的创建者
+- 感谢原项目 [yorozuya](https://github.com/hyalurion-shizutoki/yorozuya) 的创建者
 - 感谢 Flutter 和 Dart 团队提供优秀的开发框架
 
 ## 📞 联系方式
 
 如有问题或建议，请通过以下方式联系：
 
-- 原项目 Issues: https://github.com/chronie-shizutoki/universal-lancher/issues
+- 原项目 Issues: https://github.com/hyalurion-shizutoki/yorozuya/issues
 
 ---
 
-**享受使用统一启动器 Flutter 版本！** 🎉
+**享受使用万事屋 Flutter 版本！** 🎉

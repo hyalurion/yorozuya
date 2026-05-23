@@ -1,4 +1,4 @@
-package com.chronie.universal_lancher
+package com.hyalurion.yorozuya
 
 import io.flutter.embedding.android.FlutterActivity
 

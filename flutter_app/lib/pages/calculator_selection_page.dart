@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'price_comparison_page.dart';
+import 'emergency_language_page.dart';
 
 class CalculatorSelectionPage extends StatelessWidget {
   final void Function(Widget page)? onCalculatorSelected;
@@ -22,35 +23,81 @@ class CalculatorSelectionPage extends StatelessWidget {
           child: Column(
             children: [
               Expanded(
-                child: ListView.builder(
-                  itemCount: 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return Center(
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width > 600 ? 500 : double.infinity,
-                          child: _buildCalculatorCard(
-                            context,
-                            title: '价格比较器',
-                            description: '比较不同商品的单位价格，选择最划算的选项',
-                            icon: Icons.price_change_outlined,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => PriceComparisonPage()),
-                              );
-                            },
-                          ),
+                child: ListView(
+                  children: [
+                    // 价格比较器入口
+                    Center(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width > 600 ? 500 : double.infinity,
+                        child: _buildCalculatorCard(
+                          context,
+                          title: '价格比较器',
+                          description: '比较不同商品的单位价格，选择最划算的选项',
+                          icon: Icons.price_change_outlined,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => PriceComparisonPage()),
+                            );
+                          },
                         ),
-                      );
-                    } 
-                  },
-                  padding: const EdgeInsets.only(bottom: 20),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    // 海外出行标题
+                    _buildSectionTitle(context, '海外出行'),
+                    const SizedBox(height: 15),
+                    // 生活用语急救箱入口
+                    Center(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width > 600 ? 500 : double.infinity,
+                        child: _buildCalculatorCard(
+                          context,
+                          title: '生活用语急救箱',
+                          description: '点按几个按钮，快速表达你的想法',
+                          icon: Icons.translate,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const EmergencyLanguagePage()),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ],
       ),
     );
   }

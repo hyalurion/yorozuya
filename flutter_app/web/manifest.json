@@ -1,11 +1,11 @@
 {
-    "name": "统一启动器",
-    "short_name": "统一启动器",
+    "name": "万事屋",
+    "short_name": "万事屋",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "统一启动器",
+    "description": "万事屋",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

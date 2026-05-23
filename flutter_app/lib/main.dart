@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
           );
           
           return MaterialApp(
-            title: '统一启动器',
+            title: '万事屋',
             debugShowCheckedModeBanner: false,
             themeMode: themeProvider.materialThemeMode,
             theme: themeProvider.lightTheme,

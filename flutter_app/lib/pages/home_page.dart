@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
-import 'package:universal_launcher/providers/theme_provider.dart';
+import 'package:yorozuya/providers/theme_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lunar/lunar.dart';
 
