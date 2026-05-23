@@ -43,7 +43,7 @@ class _MainPageState extends State<MainPage> {
 
   final List<String> _titles = [
     '首页',
-    '计算器',
+    '工具箱',
     '今天吃什么',
     '设置',
   ];

@@ -1257,7 +1257,7 @@ class _PriceComparisonPageState extends State<PriceComparisonPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            // 返回计算器选择页面
+            // 返回工具箱选择页面
             if (widget.onBack != null) {
               widget.onBack?.call();
             } else {
@@ -1278,7 +1278,7 @@ class _PriceComparisonPageState extends State<PriceComparisonPage> {
                 // 页面标题
                 Center(
                   child: Text(
-                    '复杂商品价格比较计算器',
+                    '商品价格比较',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
