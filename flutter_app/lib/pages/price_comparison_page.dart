@@ -622,7 +622,7 @@ class _PriceComparisonPageState extends State<PriceComparisonPage> {
   // 计算商品的比较结果
   ComparisonResult _calculateResult(Product product) {
     // 转换为基准货币
-    final basePrice = convertToBaseCurrency(product.price, product.currency, _baseCurrency);
+    final basePrice = convertToBaseCurrencySync(product.price, product.currency, _baseCurrency);
     // 转换为基准单位
     final conversionFactor = unitConversion[product.unit] ?? 1.0;
     final totalBaseUnits = product.unitValue * product.quantity * conversionFactor;
@@ -1205,7 +1205,7 @@ class _PriceComparisonPageState extends State<PriceComparisonPage> {
                 DataCell(
                   Container(
                     padding: const EdgeInsets.all(16),
-                    child: Text(convertToBaseCurrency(product.price, product.currency, _baseCurrency).toStringAsFixed(2)),
+                    child: Text(convertToBaseCurrencySync(product.price, product.currency, _baseCurrency).toStringAsFixed(2)),
                   ),
                 ),
                 DataCell(

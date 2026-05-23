@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 # 注意：版本号会在构建时通过 generate_version.dart 脚本动态生成
 # 格式：1.年月日.时分+时间戳（秒）
-version: 1.20260509.1958+1778324284
+version: 1.20260523.1917+1779535066
 
 environment:
   sdk: ">=3.5.0 <4.0.0"
@@ -42,42 +42,27 @@ dependencies:
   
   # 本地存储
   shared_preferences: 2.5.5
-  hive: 2.2.3
-  hive_flutter: 1.1.0
-  
-  # WebView支持
-  webview_flutter: 4.13.1
   
   # URL启动器
   url_launcher: ^6.3.1
   
   # HTTP 客户端
   http: ^1.2.0
-  webview_flutter_web: ^0.2.3+4
   
   # 获取应用版本信息
-  package_info_plus: 10.1.0
-  
-  # 下载管理库，使用原生下载管理器
-  flutter_downloader: ^1.12.0
-  
-  # 权限管理
-  permission_handler: 12.0.1
+  package_info_plus: ^9.0.1
   
   # 地理位置获取
-  geolocator: ^14.0.0
+  geolocator: 14.0.2
   
   # 路径提供
   path_provider: ^2.1.4
   
-  # 网络信息
-  network_info_plus: 8.1.0
-  
-  # 国际化和日期格式化
-  intl: ^0.20.0
-  
   # 农历支持
   lunar: ^1.7.7
+  
+  # Currency exchange SDK (160+ currencies, offline-first)
+  currency_sdk: ^1.0.1
 
 dev_dependencies:
   flutter_test:

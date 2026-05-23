@@ -5,8 +5,11 @@ import 'package:flutter/services.dart';
 import 'providers/theme_provider.dart';
 import 'providers/food_provider.dart';
 import 'pages/main_page.dart';
+import 'data/currency_rates.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await CurrencyService.initialize();
   runApp(const MyApp());
 }
 
