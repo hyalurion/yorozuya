@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
 import 'calculator_selection_page.dart';
 import 'food_page.dart';
 import 'settings_page.dart';
@@ -21,7 +20,6 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _pages = [
-      const HomePage(),
       CalculatorSelectionPage(onCalculatorSelected: _setCalculatorPage),
       const FoodPage(),
       const SettingsPage(),
@@ -43,21 +41,18 @@ class _MainPageState extends State<MainPage> {
 
   final List<String> _titles = [
     '首页',
-    '工具箱',
     '今天吃什么',
     '设置',
   ];
   
   final List<IconData> _icons = [
     Icons.home_outlined,
-    Icons.handyman_outlined,
     Icons.restaurant_outlined,
     Icons.settings_outlined,
   ];
   
   final List<IconData> _activeIcons = [
     Icons.home,
-    Icons.handyman,
     Icons.restaurant,
     Icons.settings,
   ];

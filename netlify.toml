@@ -4,8 +4,8 @@
   base = "."
 
 [build.environment]
-  FLUTTER_VERSION = "3.41.9"
-  DART_VERSION = "3.11.5"
+  FLUTTER_VERSION = "3.44"
+  DART_VERSION = "3.12"
 
 [dev]
   command = "cd flutter_app && flutter run -d web-server"
