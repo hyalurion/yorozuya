@@ -44,7 +44,6 @@ flutter_app/
 - Provider
 - SharedPreferences
 - HTTP
-- Geolocator
 - Lunar
 - package_info_plus
 
