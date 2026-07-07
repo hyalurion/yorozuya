@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.hyalurion.yorozuya"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37    // or flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
