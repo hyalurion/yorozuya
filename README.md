@@ -84,7 +84,6 @@ flutter test
 
 - `lib/main.dart`：应用入口，初始化 Provider 和主题
 - `lib/pages/main_page.dart`：主导航页面（首页、工具箱、今日吃什么、设置）
-- `lib/pages/home_page.dart`：首页内容，包含天气、时间、农历与建议
 - `lib/pages/calculator_selection_page.dart`：工具箱入口
 - `lib/pages/price_comparison_page.dart`：价格比较器
 - `lib/pages/emergency_language_page.dart`：生活用语急救箱
