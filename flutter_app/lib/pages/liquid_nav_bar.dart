@@ -139,162 +139,174 @@ class _LiquidNavBarState extends State<LiquidNavBar>
               horizontal: screenWidth * 0.15,
               vertical: 16,
             ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 16,
-            sigmaY: 16,
-          ),
-          child: Container(
-            padding: widget.mode == NavBarMode.iconsOnly
-                ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4)
-                : const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: _getNavBarDecoration(isDarkMode),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                _trackWidth = constraints.maxWidth;
-                final itemWidth = _trackWidth / widget.titles.length;
-                
-                if (!_isDragging && _trackWidth > 0) {
-                  _targetThumbPosition = itemWidth * widget.currentIndex + itemWidth / 2;
-                  if (_thumbPosition == 0) {
-                    _thumbPosition = _targetThumbPosition;
-                  }
-                }
-
-                return GestureDetector(
-                  onPanStart: _handleDragStart,
-                  onPanUpdate: _handleDragUpdate,
-                  onPanEnd: _handleDragEnd,
-                  behavior: HitTestBehavior.translucent,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Liquid thumb - appears behind items, centered on each item
-                      AnimatedPositioned(
-                        left: _thumbPosition - itemWidth / 2,
-                        top: 3,
-                        bottom: 3,
-                        width: itemWidth,
-                        duration: _isDragging ? Duration.zero : const Duration(milliseconds: 350),
-                        curve: Curves.easeOutCubic,
-                        child: _LiquidThumb(
-                          isDragging: _isDragging,
-                          velocity: _velocity,
-                          primaryColor: primaryColor,
-                          isDarkMode: isDarkMode,
-                          mode: widget.mode,
-                        ),
-                      ),
-                      
-                      // Navigation items (icons or text)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: List.generate(widget.titles.length, (index) {
-                          final isSelected = widget.currentIndex == index;
-                          return Expanded(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  _animateToIndex(index);
-                                  widget.onIndexChanged(index);
-                                },
-                                borderRadius: BorderRadius.circular(16),
-                                splashColor: isDarkMode 
-                                    ? Colors.white.withValues(alpha: 0.15)
-                                    : Colors.black.withValues(alpha: 0.08),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 250),
-                                  curve: Curves.easeOutCubic,
-                                  padding: widget.mode == NavBarMode.iconsOnly
-                                      ? const EdgeInsets.symmetric(vertical: 12)
-                                      : const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                                  alignment: Alignment.center,
-                                  child: widget.mode == NavBarMode.iconsOnly
-                                      ? AnimatedSwitcher(
-                                          duration: const Duration(milliseconds: 250),
-                                          transitionBuilder: (child, animation) {
-                                            return ScaleTransition(
-                                              scale: animation,
-                                              child: child,
-                                            );
-                                          },
-                                          child: Icon(
-                                            key: ValueKey(isSelected),
-                                            isSelected 
-                                                ? widget.activeIcons[index]
-                                                : widget.icons[index],
-                                            size: 24,
-                                            color: isSelected 
-                                                ? primaryColor
-                                                : isDarkMode 
-                                                    ? Colors.white.withValues(alpha: 0.7)
-                                                    : Colors.black.withValues(alpha: 0.6),
-                                          ),
-                                        )
-                                      : AnimatedDefaultTextStyle(
-                                          duration: const Duration(milliseconds: 250),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                            color: isSelected 
-                                                ? primaryColor
-                                                : isDarkMode 
-                                                    ? Colors.white.withValues(alpha: 0.75)
-                                                    : Colors.black.withValues(alpha: 0.7),
-                                          ),
-                                          child: Text(widget.titles[index]),
-                                        ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // 阴影层
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: isDarkMode 
+                        ? Colors.black.withValues(alpha: 0.45)
+                        : Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 28,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 12),
                   ),
-                );
-              },
+                  BoxShadow(
+                    color: isDarkMode 
+                        ? Colors.white.withValues(alpha: 0.06)
+                        : Colors.white.withValues(alpha: 0.5),
+                    blurRadius: 16,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+          // 内容层
+          ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 16,
+                sigmaY: 16,
+              ),
+              child: Container(
+                padding: widget.mode == NavBarMode.iconsOnly
+                    ? const EdgeInsets.symmetric(horizontal: 4, vertical: 4)
+                    : const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDarkMode 
+                      ? Colors.black.withValues(alpha: 0.3)
+                      : Colors.white.withValues(alpha: 0.32),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isDarkMode 
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.white.withValues(alpha: 0.18),
+                    width: 1,
+                  ),
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    _trackWidth = constraints.maxWidth;
+                    final itemWidth = _trackWidth / widget.titles.length;
+                    
+                    if (!_isDragging && _trackWidth > 0) {
+                      _targetThumbPosition = itemWidth * widget.currentIndex + itemWidth / 2;
+                      if (_thumbPosition == 0) {
+                        _thumbPosition = _targetThumbPosition;
+                      }
+                    }
+
+                    return GestureDetector(
+                      onPanStart: _handleDragStart,
+                      onPanUpdate: _handleDragUpdate,
+                      onPanEnd: _handleDragEnd,
+                      behavior: HitTestBehavior.translucent,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Liquid thumb - appears behind items, centered on each item
+                          AnimatedPositioned(
+                            left: _thumbPosition - itemWidth / 2,
+                            top: 3,
+                            bottom: 3,
+                            width: itemWidth,
+                            duration: _isDragging ? Duration.zero : const Duration(milliseconds: 350),
+                            curve: Curves.easeOutCubic,
+                            child: _LiquidThumb(
+                              isDragging: _isDragging,
+                              velocity: _velocity,
+                              primaryColor: primaryColor,
+                              isDarkMode: isDarkMode,
+                              mode: widget.mode,
+                            ),
+                          ),
+                          
+                          // Navigation items (icons or text)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: List.generate(widget.titles.length, (index) {
+                              final isSelected = widget.currentIndex == index;
+                              return Expanded(
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () {
+                                      _animateToIndex(index);
+                                      widget.onIndexChanged(index);
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    splashColor: isDarkMode 
+                                        ? Colors.white.withValues(alpha: 0.15)
+                                        : Colors.black.withValues(alpha: 0.08),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 250),
+                                      curve: Curves.easeOutCubic,
+                                      padding: widget.mode == NavBarMode.iconsOnly
+                                          ? const EdgeInsets.symmetric(vertical: 12)
+                                          : const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                      alignment: Alignment.center,
+                                      child: widget.mode == NavBarMode.iconsOnly
+                                          ? AnimatedSwitcher(
+                                              duration: const Duration(milliseconds: 250),
+                                              transitionBuilder: (child, animation) {
+                                                return ScaleTransition(
+                                                  scale: animation,
+                                                  child: child,
+                                                );
+                                              },
+                                              child: Icon(
+                                                key: ValueKey(isSelected),
+                                                isSelected 
+                                                    ? widget.activeIcons[index]
+                                                    : widget.icons[index],
+                                                size: 24,
+                                                color: isSelected 
+                                                    ? primaryColor
+                                                    : isDarkMode 
+                                                        ? Colors.white.withValues(alpha: 0.7)
+                                                        : Colors.black.withValues(alpha: 0.6),
+                                              ),
+                                            )
+                                          : AnimatedDefaultTextStyle(
+                                              duration: const Duration(milliseconds: 250),
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                color: isSelected 
+                                                    ? primaryColor
+                                                    : isDarkMode 
+                                                        ? Colors.white.withValues(alpha: 0.75)
+                                                        : Colors.black.withValues(alpha: 0.7),
+                                              ),
+                                              child: Text(widget.titles[index]),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  BoxDecoration _getNavBarDecoration(bool isDarkMode) {
-    return BoxDecoration(
-      color: isDarkMode 
-          ? Colors.black.withValues(alpha: 0.3)
-          : Colors.white.withValues(alpha: 0.32),
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(
-        color: isDarkMode 
-            ? Colors.white.withValues(alpha: 0.12)
-            : Colors.white.withValues(alpha: 0.18),
-        width: 1,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: isDarkMode 
-              ? Colors.black.withValues(alpha: 0.45)
-              : Colors.black.withValues(alpha: 0.1),
-          blurRadius: 28,
-          spreadRadius: 0,
-          offset: const Offset(0, 12),
-        ),
-        BoxShadow(
-          color: isDarkMode 
-              ? Colors.white.withValues(alpha: 0.06)
-              : Colors.white.withValues(alpha: 0.5),
-          blurRadius: 16,
-          offset: const Offset(0, -4),
-        ),
-      ],
-    );
-  }
+
 }
 
 class _LiquidThumb extends StatelessWidget {
