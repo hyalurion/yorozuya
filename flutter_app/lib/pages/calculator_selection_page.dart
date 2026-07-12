@@ -43,28 +43,6 @@ class CalculatorSelectionPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    // 海外出行标题
-                    _buildSectionTitle(context, '海外出行'),
-                    const SizedBox(height: 15),
-                    // 生活用语急救箱入口
-                    Center(
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width > 600 ? 500 : double.infinity,
-                        child: _buildCalculatorCard(
-                          context,
-                          title: '生活用语急救箱',
-                          description: '点按几个按钮，快速表达你的想法',
-                          icon: Icons.translate,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const EmergencyLanguagePage()),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),

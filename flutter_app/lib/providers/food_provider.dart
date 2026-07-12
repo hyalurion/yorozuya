@@ -27,13 +27,17 @@ class FoodProvider extends ChangeNotifier {
   void _loadDefaultData() {
     // 默认食物（使用空字符串作为category，因为我们不再需要分类）
     _foodItems = [
-      FoodItem(id: 1, name: '观前街炒饭', category: '', weight: 1.69),
-      FoodItem(id: 2, name: '鑫花溪', category: '', weight: 1.0),
-      FoodItem(id: 3, name: '小贩的土豆粉', category: '', weight: 1.83),
-      FoodItem(id: 4, name: '王氏面条', category: '', weight: 3.67),
-      FoodItem(id: 5, name: '华莱士汉堡', category: '', weight: 1.47),
-      FoodItem(id: 6, name: '冯氏烤冷面', category: '', weight: 2.75),
-      FoodItem(id: 7, name: '各式美味泡面', category: '', weight: 11.0),
+      FoodItem(id: 1, name: '各式美味泡面', category: '', weight: 11.0),   // 2元
+      FoodItem(id: 2, name: '蛋汁大排面', category: '', weight: 1.1),     // 20元
+      FoodItem(id: 3, name: '凉皮', category: '', weight: 1.47),          // 15元 (22/15≈1.47)
+      FoodItem(id: 4, name: '鑫花溪牛肉米粉', category: '', weight: 0.88), // 25元 (22/25=0.88)
+      FoodItem(id: 5, name: '港式虾仁滑蛋', category: '', weight: 0.88),   // 25元
+      FoodItem(id: 6, name: '热干面', category: '', weight: 1.47),        // 15元
+      FoodItem(id: 7, name: '云南过桥米线', category: '', weight: 1.1),    // 20元
+      FoodItem(id: 8, name: '汉堡', category: '', weight: 0.55),          // 40元 (22/40=0.55)
+      FoodItem(id: 9, name: '奶茶', category: '', weight: 1.29),          // 17元 (22/17≈1.29)
+      FoodItem(id: 10, name: '馄饨', category: '', weight: 1.47),         // 15元
+      FoodItem(id: 11, name: '火鸡面', category: '', weight: 0.88),       // 25元
     ];
 
     _saveData();
