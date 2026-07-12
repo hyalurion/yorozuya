@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'price_comparison_page.dart';
-import 'emergency_language_page.dart';
 
 class CalculatorSelectionPage extends StatelessWidget {
   final void Function(Widget page)? onCalculatorSelected;
@@ -49,33 +48,6 @@ class CalculatorSelectionPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 4,
-            height: 24,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-        ],
       ),
     );
   }
