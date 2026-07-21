@@ -50,7 +50,7 @@ dependencies:
   http: ^1.2.0
   
   # 获取应用版本信息
-  package_info_plus: ^9.0.1
+  package_info_plus: ^10.0.0
   
   # 路径提供
   path_provider: ^2.1.4
